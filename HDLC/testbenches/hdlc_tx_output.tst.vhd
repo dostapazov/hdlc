@@ -58,16 +58,17 @@ test_main:
 	procedure transmit( constant tx_value: in std_logic  ) is
 	variable wres : boolean := false;
 	begin
-		wait_logic(wres, i_clk, o_rdy,'1',C_TRANSMIT_CLOCKS );
+		wait_logic(wres, i_clk, o_rdy,'1',2*C_TRANSMIT_CLOCKS );
 		check(wres = true,"Expect O_RDY active");
 		i_data	<= tx_value;
 		i_en	<= '1';
 		wait_logic(wres, i_clk, o_rdy,'0',C_TRANSMIT_CLOCKS*2 );
 		check(wres = true,"Expect O_RDY inactive to confirm tx start");
-		delay_clock(i_clk,1);
-		check(o_rdy = '1', "Expect rdy ");
-		check(o_line = tx_value, "Expect line value is same as data");
 		i_en	<= '0';
+		check(o_line = tx_value, "Expect line value is same as data");
+		wait_logic(wres, i_clk, o_rdy,'1',C_TRANSMIT_CLOCKS*2 );
+		check_true(wres, "Expect rdy bcame active ");
+		
 		
 	end procedure transmit;
 

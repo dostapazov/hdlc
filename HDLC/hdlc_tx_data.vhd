@@ -85,7 +85,7 @@ begin
 	impure function next_bit return STATE_T is
 	begin
 
-		if s_rdy_out = '0'  then
+		if s_rdy_out = '1'  then
 			
 			if s_bstaf_expect = '1' then
 				s_data(s_data'high) <='0';

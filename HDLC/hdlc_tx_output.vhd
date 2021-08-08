@@ -26,7 +26,7 @@ architecture rtl of hdlc_tx_output is
 	signal s_rst	:	std_logic;
 	signal s_clk	:	std_logic;
 	
-	type   STATE_T is (ST_IDLE, ST_START, ST_OUTPUT);
+	type   STATE_T is (ST_IDLE, ST_START, ST_OUTPUT, ST_OUTPUT_LAST);
 	signal state_curr, state_next : STATE_T := ST_IDLE;
 	signal s_data_out	: std_logic;
 
@@ -60,7 +60,8 @@ begin
 		begin
 		 if	i_en = '1' then
 			s_data_out <= i_data;
-			return ST_START;
+			v_duration := get_duration;
+			return ST_OUTPUT;
 		end if;
 		 return ST_IDLE;
 		end function get_input; 
@@ -77,19 +78,24 @@ begin
 				   state_next <= get_input;
 			
 				when ST_START	=>
-					v_duration  := get_duration;
 					state_next	<= ST_OUTPUT;
 					
 				when ST_OUTPUT	=>
 					v_duration := v_duration - 1;
 					if v_duration = 1  then
-				   		state_next <= get_input;
+				   		state_next <= ST_OUTPUT_LAST;
+					else
+						
 					end if;
+					
+				when ST_OUTPUT_LAST =>
+						state_next <= get_input;
+
 			end case; 
 		end if;
 	end process s_state;
 	
-	with state_curr select o_rdy  <= '0' when ST_START,	not s_rst when others;
+	with state_curr select o_rdy  <= '0' when ST_START|ST_OUTPUT,	not s_rst when others;
 	with state_curr select o_line <= '0' when ST_IDLE ,	s_data_out when others;   
 
 
