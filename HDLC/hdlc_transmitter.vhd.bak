@@ -30,16 +30,14 @@ end entity hdlc_transmitter;
 
 architecture rtl of hdlc_transmitter is
 
-	type TX_STATE_T IS (ST_RST ,ST_IDLE, ST_START_FLAG,ST_START_FLAG_TX, ST_START_DATA ,ST_TX_DATA, ST_END_FLAG,ST_END_FLAG_TX );
+	type TX_STATE_T IS (ST_RST ,ST_IDLE, ST_BEG_FLAG, ST_START_DATA ,ST_TX_DATA, ST_END_FLAG );
 	signal state_current, state_next : TX_STATE_T := ST_IDLE;
 	signal s_rst : std_logic := '1';
 	signal s_clk : std_logic;
-	signal s_rdy : std_logic;
 	signal s_out_rdy : std_logic;
 	signal s_out_bit, s_out_data ,s_out_start_flag, s_out_end_flag : std_logic;
 	signal s_out_en, s_out_en_data, s_out_en_start_flag, s_out_en_end_flag : std_logic;
 	signal s_tx_data : std_logic_vector(DATA_WIDTH-1 downto 0);
-	signal s_start_flag , s_start_flag_rdy : std_logic;
 
 begin
 	s_clk <= i_clk;
@@ -75,10 +73,10 @@ begin
 		i_clk       => s_clk,
 		i_data      => c_start_flag,
 		i_no_bstaff => '1',
-		i_en        => s_start_flag,
+		i_en        => s_out_en_start_flag,
 		i_rdy_out   => s_out_rdy,
-		o_out_en    => s_out_en_start_flag,
-		o_rdy       => s_start_flag_rdy,
+		o_out_en    => open, -- s_start_flag_en,
+		o_rdy       => open, -- s_start_flag_rdy,
 		o_tx_data   => s_out_start_flag,
 		o_bstaf     => open,
 		o_bstaf_cnt => open
@@ -95,7 +93,7 @@ begin
 	-- 	  i_data      => c_end_flag,
 	-- 	  i_no_bstaff => '1',
 	-- 	  i_en        => s_end_flag_en,
-	-- 	  i_rdy_out   => s_out_rdy,
+	-- 	  i_rdy_out   => s_end_flag__rdy_out,
 	-- 	  o_out_en    => s_end_flag_out_en,
 	-- 	  o_rdy       => s_end_flag_rdy,
 	-- 	  o_tx_data   => s_end_flag_tx_data,
@@ -143,23 +141,16 @@ begin
 				when ST_IDLE	=>
 					if i_write = '1' then
 						s_tx_data <= i_data;	
-						state_next		<= ST_START_FLAG;
+						state_next		<= ST_BEG_FLAG;
 					end if;
 				
-				when ST_START_FLAG	=>
-					if(s_out_en_start_flag = '0') then
-						state_next <= ST_START_FLAG_TX;
-					end if;
-
-				when ST_START_FLAG_TX	=>
-					if(s_out_en_start_flag = '1') then
-						state_next <= ST_START_DATA;
-					end if;
+				when ST_BEG_FLAG	=>
+				
 					
 				when ST_START_DATA	=>
 
 				when ST_TX_DATA	=>
-
+				
 				when ST_END_FLAG	=>	
 
 				when others =>
@@ -168,17 +159,6 @@ begin
 			
 		end if;
 	end process s_state;
-
-		
-	with state_current select s_rdy <= '1' when ST_IDLE|ST_TX_DATA,	'0' when others;
-	with state_current select s_start_flag <= '1' when ST_START_FLAG,	'0' when others;
-
-	with state_current select s_out_en <= 
-		s_out_en_start_flag		when ST_START_FLAG,
-		'0'	when others;
-	with state_current select s_out_bit	<= 
-		s_out_start_flag 	when ST_START_FLAG,
-		'0' when others;
-
+	
 
 end architecture rtl;

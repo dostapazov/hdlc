@@ -1,3 +1,7 @@
 *vunit_out*/
 *db*/
+*output_files*/
+*.done
+*.rpt
+*.summary
 

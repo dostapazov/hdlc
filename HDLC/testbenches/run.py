@@ -33,10 +33,10 @@ def create_test_suite(lib):
     tb2.add_config(name = "output-8-clock", generics=dict(duration = 2))
     tb2.add_config(name = "output-16-clock", generics=dict(duration = 3))
     
-    #lib.add_source_files("../hdlc_transmitter.vhd");
-    #lib.add_source_files("hdlc_transmitter.tst.vhd");
+    lib.add_source_files("../hdlc_transmitter.vhd");
+    lib.add_source_files("hdlc_transmitter.tst.vhd");
+    tb3 = lib.entity("tb_hdlc_transmitter")
     
-    #tb3 = lib.entity("tb_hdlc_transmitter")
     os.chdir(save_dir)
 
 

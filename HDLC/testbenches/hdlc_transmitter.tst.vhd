@@ -58,7 +58,7 @@ test_main:
 			i_rst 	<= '1';
 			delay_clock(i_clk,1);
 			i_rst <= '0';
-			wait_logic(wait_result, i_clk, o_rdy, '1', 5);
+			delay_clock(i_clk,2);
 		end procedure reset;
 		
 		procedure write_data(constant data : std_logic_vector(i_data'range)) is
