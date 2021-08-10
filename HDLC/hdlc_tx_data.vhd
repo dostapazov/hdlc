@@ -14,6 +14,7 @@ entity hdlc_tx_data is
 		i_rst		: in	std_logic;
 		i_clk		: in	std_logic;
 		i_data		: in	std_logic_vector(DATA_WIDTH - 1 downto 0);
+		i_count		: in	positive range 1 to DATA_WIDTH := DATA_WIDTH;
 		i_no_bstaff	: in	std_logic := '0';
 		i_en		: in	std_logic;
 		i_rdy_out	: in	std_logic;
@@ -34,6 +35,7 @@ architecture rtl of hdlc_tx_data is
  signal s_tx_bit: std_logic;
  signal s_state_rst, s_state_wr, s_bstaf_expect : std_logic;
  signal s_bstaf_cnt	: natural range 0 to 16#FFFF# :=0;
+ signal s_count	: natural range 0 to DATA_WIDTH;
  
 begin
 
@@ -42,6 +44,7 @@ begin
 	s_en			<= i_en;
 	s_rdy_out		<= i_rdy_out;
 	s_no_bitstaf	<= i_no_bstaff;
+	s_count			<= i_count;
 
 	o_rdy			<= s_rdy_in;
 	o_out_en		<= s_out_en;
@@ -76,7 +79,7 @@ begin
 		
 		if i_en = '1' then
 			s_data <= i_data;
-			v_bit_count := i_data'length;
+			v_bit_count := s_count;
 			return ST_START;
 		end if;
 		return ST_IDLE;
