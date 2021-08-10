@@ -115,14 +115,17 @@ begin
 					state_next 	<= get_input;
 					s_bstaf_cnt <= 0;
 					
-				when ST_START	=>
+				when ST_START | ST_SHIFT | ST_BTSF	=>
 					state_next <= next_bit;
+
+				-- when ST_START	=>
+				-- 	state_next <= next_bit;
 					
-				when ST_SHIFT	=>
-					state_next <= next_bit;
+				-- when ST_SHIFT	=>
+				-- 	state_next <= next_bit;
 				
-				when ST_BTSF	=>
- 					state_next <= next_bit;
+				-- when ST_BTSF	=>
+ 				-- 	state_next <= next_bit;
 				
 				when others => state_next <= ST_IDLE;
 			end case;
