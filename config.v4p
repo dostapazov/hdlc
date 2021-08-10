@@ -1,0 +1,48 @@
+{
+ "libraries": {
+  "tbench_helpers/*.vhd": "tb_helpers",
+  "HDLC/*.vhd": "hdlc_lib",
+  "HDLC/testbenches/*.vhd": "hdlc_lib_tb",
+
+
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/array/src/*.vhd": "vunit_lib",
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/array/test/*.vhd": "vunit_lib",
+
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/check/src/*.vhd": "vunit_lib",
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/check/test/*.vhd": "vunit_lib",
+
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/com/src/*.vhd": "vunit_lib",
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/com/test/*.vhd": "vunit_lib",
+
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/core/src/*.vhd": "vunit_lib",
+
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/data_types/src/*.vhd": "vunit_lib",
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/data_types/test/*.vhd": "vunit_lib",
+
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/dictionary/src/*.vhd": "vunit_lib",
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/dictionary/test/*.vhd": "vunit_lib",
+
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/run/test/*.vhd": "vunit_lib",
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/run/src/*.vhd": "vunit_lib",
+
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/setting_ops/test/*.vhd": "vunit_lib",
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/setting_ops/src/*.vhd": "vunit_lib",
+
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/rundom/test/*.vhd": "vunit_lib",
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/rundom/src/*.vhd": "vunit_lib",
+
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/path/test/*.vhd": "vunit_lib",
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/path/src/*.vhd": "vunit_lib",
+
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/logging/test/*.vhd": "vunit_lib",
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/logging/src/*.vhd": "vunit_lib",
+
+
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/verification_components/src/*.vhd": "vunit_lib",
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/verification_components/test/*.vhd": "vunit_lib",
+
+  "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/*.vhd": "vunit_lib",
+
+  
+ },
+}

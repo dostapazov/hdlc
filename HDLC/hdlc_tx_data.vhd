@@ -14,7 +14,7 @@ entity hdlc_tx_data is
 		i_rst		: in	std_logic;
 		i_clk		: in	std_logic;
 		i_data		: in	std_logic_vector(DATA_WIDTH - 1 downto 0);
-		i_no_bstaff	: in	std_logic := '1';
+		i_no_bstaff	: in	std_logic := '0';
 		i_en		: in	std_logic;
 		i_rdy_out	: in	std_logic;
 		o_out_en	: out	std_logic;
@@ -74,7 +74,7 @@ begin
 	impure function get_input return STATE_T is
 	begin
 		
-		if s_en = '1' then
+		if i_en = '1' then
 			s_data <= i_data;
 			v_bit_count := i_data'length;
 			return ST_START;
@@ -85,7 +85,7 @@ begin
 	impure function next_bit return STATE_T is
 	begin
 
-		if s_rdy_out = '1'  then
+		if s_rdy_out = '0'  then
 			
 			if s_bstaf_expect = '1' then
 				s_data(s_data'high) <='0';
@@ -102,6 +102,8 @@ begin
 		return ST_SHIFT;
 	end function next_bit;
 
+
+
 	begin
 		if(s_rst = '1' ) then
 			state_next <= ST_IDLE;
@@ -110,24 +112,30 @@ begin
 		    
 			case state_curr is
 				when ST_IDLE	=>
-					if(s_en = '1') then
-						s_bstaf_cnt <= 0;
-					end if;
 					state_next 	<= get_input;
+					s_bstaf_cnt <= 0;
 					
-				when ST_START | ST_SHIFT | ST_BTSF	=>
+				when ST_START	=>
 					state_next <= next_bit;
 					
+				when ST_SHIFT	=>
+					state_next <= next_bit;
+				
+				when ST_BTSF	=>
+ 					state_next <= next_bit;
+				
+				when others => state_next <= ST_IDLE;
 			end case;
 		end if;
 		
 	end process s_state;
-
-	s_state_rst	<= not s_out_en or s_no_bitstaf;
-	s_state_wr	<= not s_rdy_out;
-
-	with state_curr select s_out_en		<=  '0' when ST_IDLE,	'1' when others;
-	with state_curr select s_rdy_in		<=  '0' when ST_START,	'1' when others;
-	with state_curr select s_tx_bit		<=  s_data(s_data'high)	when ST_START|ST_SHIFT , '0' when others;
+	
+	s_state_rst <=  not s_out_en or s_no_bitstaf ;
+	s_state_wr  <=  s_out_en and not s_rdy_out;
+	
+	with state_curr select s_out_en		<=  '0' when ST_IDLE, '1' when others;
+	with state_curr select s_rdy_in		<=  s_rdy_out when ST_IDLE , '0' when ST_START, '1' when others;
+	with state_curr select s_tx_bit		<=  s_data(s_data'high) when ST_START|ST_SHIFT , '0' when others;
+	
 
 end architecture rtl;

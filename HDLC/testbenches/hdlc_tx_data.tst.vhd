@@ -28,7 +28,7 @@ architecture tb of tb_hdlc_tx_data is
 	signal	i_rst		: std_logic;
 	signal	i_clk		: std_logic;
 	signal	i_data		: std_logic_vector(DATA_WIDTH - 1 downto 0);
-	signal	i_no_bstaff	: std_logic := '1';
+	signal	i_no_bstaff	: std_logic := '0';
 	signal	i_en		: std_logic;
 	signal	i_rdy_out	: std_logic;
 
@@ -113,7 +113,7 @@ test_main:
 	variable v_res : boolean;
 	variable v_clocks : natural;
 	begin
-		wait_logic_clocks(v_res,v_clocks, i_clk, o_out_en, '0',c_output_clocks*2);
+		wait_logic_clocks(v_res,v_clocks, i_clk, o_out_en , '0',c_output_clocks*2);
 		check_true(v_res,"Finish timeout");
 		info("Wait finish take "&integer'image(v_clocks)& " clocks [ "&integer'image(c_output_clocks) &" ]" );
 
@@ -143,7 +143,8 @@ test_main:
 			check_confirm;
 		end loop;
 		i_en<= '0';
-		check_result;
+		wait_logic_clocks(v_res,v_clocks, i_clk,o_out_en, '0',c_output_clocks*2);
+		check_true(v_res,"Finish timeout");
 
 	end procedure transmit_data;
 	
@@ -155,7 +156,6 @@ test_main:
 				reset;
 				check(o_rdy		= '1', "Expected RDY active after reset");
 				check(o_tx_data	= '0', "Expected line output passive");
-				check(o_out_en  = '0', "Expected output enable passive");
 				
 			elsif run("test_ready") then
 				reset;
@@ -213,10 +213,12 @@ test_main:
 			elsif run("test_transmit_bitstaff_off") then
 				reset ("11111111");
 				i_no_bstaff <= '1';
+				delay_clock(i_clk,2);
 				i_en <= '1';
 				check_confirm;
 				i_en <= '0';
-				check_result(bstaf_count=>0);				
+				check_result(bstaf_count=>0);	
+
 			elsif run("test_bitstaffing_longmsg") then
 				i_no_bstaff <= '0';
 				reset ;
