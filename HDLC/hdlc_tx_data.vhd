@@ -115,9 +115,10 @@ begin
 		    
 			case state_curr is
 				when ST_IDLE	=>
-					state_next 	<= get_input;
-					s_bstaf_cnt <= 0;
-					
+					if(s_en = '1') then
+						s_bstaf_cnt <= 0;
+						state_next 	<= get_input;
+					end if;
 				when ST_START | ST_SHIFT | ST_BTSF	=>
 					state_next <= next_bit;
 

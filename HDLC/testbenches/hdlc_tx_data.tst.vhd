@@ -28,6 +28,7 @@ architecture tb of tb_hdlc_tx_data is
 	signal	i_rst		: std_logic;
 	signal	i_clk		: std_logic;
 	signal	i_data		: std_logic_vector(DATA_WIDTH - 1 downto 0);
+	signal  i_count		: positive range 1 to DATA_WIDTH;
 	signal	i_no_bstaff	: std_logic := '0';
 	signal	i_en		: std_logic;
 	signal	i_rdy_out	: std_logic;
@@ -55,6 +56,7 @@ begin
 		i_rst		=> i_rst,
 		i_clk		=> i_clk,
 		i_data		=> i_data,
+		i_count		=> i_count,
 		i_no_bstaff	=> i_no_bstaff,
 		i_en		=> i_en,
 		i_rdy_out	=> i_rdy_out,
@@ -71,7 +73,7 @@ test_main:
 	variable v_res : boolean := false;
 	variable v_count : integer;
 	
-	procedure set_data(constant data : in std_logic_vector) is
+	procedure set_data(constant data : in std_logic_vector; constant bcnt : positive range 1 to DATA_WIDTH:=DATA_WIDTH) is
 	variable v_data :std_logic_vector(i_data'range) := (others => '0');
 	begin
 		if(data'length > v_data'length) then
@@ -79,7 +81,8 @@ test_main:
 		else
 			v_data(data'high downto data'low) := data;
 		end if;
-		i_data <= v_data;
+		i_data  <= v_data;
+		i_count <= bcnt;
 	
 	end procedure set_data;
 	
@@ -132,12 +135,18 @@ test_main:
 		
 	end procedure check_result;
 
-	procedure transmit_data(constant data : in std_logic_vector; constant count : in positive := 1) is
+	procedure transmit_data(
+		constant data : in std_logic_vector; 
+		constant count : in positive := 1;
+		constant bcnt  : in positive range 1 to DATA_WIDTH := DATA_WIDTH
+		)
+
+	is
 	variable v_counter , v_clocks: natural := 0;
 	variable v_res	: boolean;
 	begin
 		i_en <= '1';
-		set_data(data);
+		set_data(data,bcnt);
 		while v_counter < count loop
 			v_counter := v_counter +1;
 			check_confirm;
@@ -222,8 +231,23 @@ test_main:
 			elsif run("test_bitstaffing_longmsg") then
 				i_no_bstaff <= '0';
 				reset ;
-				transmit_data("11111111",32);
+				transmit_data("11111111",32,8);
 				check_result(bstaf_count => 51);
+			elsif run("test_transmit_1bit") then
+				i_no_bstaff <= '0';
+				reset ;
+				transmit_data("11111111",8,1);
+				check_result(bstaf_count => 1);
+			elsif run("test_transmit_2bit") then
+				i_no_bstaff <= '0';
+				reset ;
+				transmit_data("11111111",8,2);
+				check_result(bstaf_count => 3);
+			elsif run("test_transmit_7bit") then
+				i_no_bstaff <= '0';
+				reset ;
+				transmit_data("11111111",8,7);
+				check_result(bstaf_count => 11);
 
 			end if;
 			
