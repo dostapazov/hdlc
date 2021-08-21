@@ -28,7 +28,7 @@ architecture tb of tb_hdlc_transmitter is
 	signal i_clk,	i_rst	:	std_logic;
 	signal i_write	: std_logic;
 	signal i_data	: std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
-	signal o_line,	o_rdy	:	std_logic;
+	signal o_line,	o_rdy, o_active	:	std_logic;
 
 begin
 	
@@ -42,7 +42,8 @@ begin
 		i_write	=>	i_write,
 		i_duration	=> duration,
 		o_rdy	=>	o_rdy,
-		o_line	=>	o_line
+		o_line	=>	o_line,
+		o_active => o_active
 	);
 	
 test_main:
@@ -92,29 +93,13 @@ test_main:
 		test_runner_setup(runner, runner_cfg);
 		
 		while(test_suite) loop
-			if run("reset") then
+			if run("afert reset o_ready=1 o_line = 0 and o_active = 0") then
 				reset;
 				check(o_rdy		= '1', "Expected RDY active after reset");
 				check(o_line	= '0', "Expected line output passive");
-				
-			elsif run("start_transmitt") then
-				test_start_transmit;
-				
-			elsif run ("end_flag") then
-				test_start_transmit;
-				wait_logic(wait_result, i_clk, o_line, '0', 10+flag_width*C_BIT_OUTPUT_CLOCKS);
-				report "wr "& boolean'image(wait_result) ;
-				wait_logic(wait_result, i_clk, o_line, '1', 10+flag_width*C_BIT_OUTPUT_CLOCKS);
-				report "wr "& boolean'image(wait_result) ;
-				v_counter := 0;
-				while(o_line = '1') loop
-					v_counter := v_counter + 1;
-					delay_clock(i_clk,1);
-				end loop;
-				check_equal(v_counter/C_BIT_OUTPUT_CLOCKS, C_END_FLAG_WIDTH  );
+				check(o_active	= '0', "Expected o_active is low");
 				
 			end if;
-			
 		end loop;
 		
 		test_runner_cleanup(runner);

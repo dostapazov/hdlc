@@ -15,7 +15,7 @@ entity hdlc_tx_output is
 		i_clk		: in	std_logic;
 		i_data		: in	std_logic;
 		i_en		: in	std_logic;
-		i_duration	: in 	natural range 0 to 4;
+		i_duration	: in 	natural range 0 to 6;
 		o_rdy		: out	std_logic;
 		o_line		: out	std_logic
 	);
@@ -30,10 +30,15 @@ architecture rtl of hdlc_tx_output is
 	signal state_curr, state_next : STATE_T := ST_IDLE;
 	signal s_data_out	: std_logic;
 
-	impure function get_duration return positive is
+	
+	subtype DURATION_T is natural range 0 to 128; -- 2 **(1+i_duration'high);
+
+	impure function get_duration return DURATION_T is
 	begin
 		return 2 ** (1+i_duration);
 	end function get_duration;
+	
+	
 	
 begin
 	
@@ -54,15 +59,15 @@ begin
 	
 	s_state:
 	process (s_clk, s_rst) 
-		variable v_duration : natural := 0;
+		variable v_duration : DURATION_T := 0;
 
 		impure function get_input return STATE_T is
 		begin
 		 if	i_en = '1' then
 			s_data_out <= i_data;
 			return ST_START;
-		end if;
-		 return ST_IDLE;
+		 end if;
+		 	return ST_IDLE;
 		end function get_input; 
 
 	begin
@@ -91,6 +96,5 @@ begin
 	
 	with state_curr select o_rdy  <= '0' when ST_START,	not s_rst when others;
 	with state_curr select o_line <= '0' when ST_IDLE ,	s_data_out when others;   
-
 
 end architecture rtl;
