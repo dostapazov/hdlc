@@ -27,11 +27,13 @@ architecture tb of tb_hdlc_transmitter is
 	
 	signal i_clk,	i_rst	:	std_logic;
 	signal i_write	: std_logic;
-	signal i_data	: std_logic_vector(DATA_WIDTH-1 downto 0) := (others => '0');
+	signal i_data	: std_logic_vector(data_width-1 downto 0) := (others => '0');
+	signal i_count	: positive range 1 to data_width := data_width;
+	signal i_duration : natural range 0 to 6;
 	signal o_line,	o_rdy, o_active	:	std_logic;
 
 begin
-	
+	i_duration <= duration;
 	dut : entity  work.hdlc_transmitter
 	generic map (DATA_WIDTH => data_width, FLAG_WIDTH => flag_width)
 	port map
@@ -39,8 +41,9 @@ begin
 		i_clk	=>	i_clk,
 		i_rst	=>	i_rst,
 		i_data	=>	i_data,
+		i_count	=>	i_count,
 		i_write	=>	i_write,
-		i_duration	=> duration,
+		i_duration	=> i_duration,
 		o_rdy	=>	o_rdy,
 		o_line	=>	o_line,
 		o_active => o_active
@@ -69,7 +72,7 @@ test_main:
 				if wait_result then
 					i_write <= '1';
 					i_data	<= data;
-					delay_clock(i_clk,1);
+					wait_logic(wait_result,i_clk,o_rdy,'0',20);
 				end if;
 				i_write <= '0';
 		end procedure write_data;
@@ -98,7 +101,11 @@ test_main:
 				check(o_rdy		= '1', "Expected RDY active after reset");
 				check(o_line	= '0', "Expected line output passive");
 				check(o_active	= '0', "Expected o_active is low");
-				
+			elsif run("start transmit rise up o_active") then
+				reset;
+				write_data("10101010");
+				delay_clock(i_clk,20);
+				check(o_active = '1',"Expected o_active became '1'");
 			end if;
 		end loop;
 		

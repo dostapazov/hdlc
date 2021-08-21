@@ -28,15 +28,18 @@ end entity hdlc_transmitter;
 
 architecture rtl of hdlc_transmitter is
 
-	type HDLC_TX_STATE_T IS (ST_RST ,ST_IDLE, ST_BEG_FLAG, ST_GET_DATA ,ST_DATA, ST_BIT_STAFFING,ST_END_FLAG );
+	constant C_FLAG_BIT_COUNT	: positive   := FLAG_WIDTH+1;
+	type HDLC_TX_STATE_T IS (ST_RST ,ST_IDLE, ST_BEG_FLAG_START, ST_BEG_FLAG , ST_GET_DATA ,ST_DATA, ST_BIT_STAFFING,ST_END_FLAG );
 	signal state_current, state_next : HDLC_TX_STATE_T := ST_IDLE;
 	
+	signal s_active		: std_logic;
+	signal s_write		: std_logic;
 	signal s_flag		: std_logic_vector(i_data'range) := ( others => '1');
 	signal s_data		: std_logic_vector(i_data'range);
 	signal s_tx_data	: std_logic_vector(i_data'range);
 	signal s_tx_count	: positive  range 1 to DATA_WIDTH := DATA_WIDTH;
 	signal s_tx_en		: std_logic;
-	signal s_tx_rdy_out	: std_logic;
+	signal s_tx_rdy		: std_logic;
 	signal s_duration	: natural range 0 to 6;
 	signal s_no_bstaff	: std_logic;
 
@@ -51,7 +54,11 @@ architecture rtl of hdlc_transmitter is
 begin
 	s_clk		<= i_clk;
 	o_rdy		<= s_rdy;
+	o_active	<= s_active;
 	s_duration	<= i_duration;
+	s_write		<= i_write;
+
+
 	
 	rst:	process(s_clk)	begin
 		if rising_edge(s_clk) then
@@ -85,9 +92,9 @@ begin
 		i_count     => s_tx_count,
 		i_no_bstaff => s_no_bstaff,
 		i_en        => s_tx_en,
-		i_rdy_out   => s_tx_rdy_out,
-		o_out_en    => open,
-		o_rdy       => open,
+		i_rdy_out   => s_out_rdy,
+		o_out_en    => s_out_en,
+		o_rdy       => s_tx_rdy,
 		o_tx_data   => s_out_bit,
 		o_bstaf     => open,
 		o_bstaf_cnt => open
@@ -113,9 +120,33 @@ begin
 						state_next <= ST_IDLE;
 					end if;
 				
-				when ST_IDLE	=>
+				when ST_IDLE		=>
+					if(s_write = '1') then
+						state_next	<= ST_BEG_FLAG_START;
+					end if;
+				when ST_BEG_FLAG_START	=>
+					if(s_tx_rdy = '0') then
+						state_next <= ST_GET_DATA;
+					end if;
 				when ST_BEG_FLAG	=>
+					if(s_tx_rdy = '0') then
+						state_next <= ST_GET_DATA;
+					end if;
+
 				when ST_GET_DATA	=>
+					if(s_tx_rdy = '1') then
+						if(s_write = '1') then
+							s_data <= i_data;
+							state_next	<= ST_DATA;
+						else
+							state_next	<= ST_END_FLAG;
+						end if;
+						
+					end if;
+				when ST_DATA		=>
+					if(s_tx_rdy = '0') then
+						state_next <= ST_GET_DATA;
+					end if;
 				when ST_END_FLAG	=>	
 				when others =>
 					state_next <= ST_RST;
@@ -125,8 +156,16 @@ begin
 	end process s_state;
 	
 	
-	with state_current  select s_rdy	<= '1' when ST_IDLE | ST_DATA,	'0' when others;
-	with state_current  select s_tx_en	<= '0' when ST_RST	| ST_IDLE,	'1' when others;
+	with state_current select s_rdy			<= '0' when ST_RST | ST_GET_DATA,	'1' when others;
+
+	with state_current select s_tx_en		<= '0' when ST_RST	| ST_IDLE,	'1' when others;
+
+	with state_current select s_no_bstaff	<= '0' when ST_GET_DATA, '1' when others;
+	with state_current select s_active		<= '0' when ST_RST	| ST_IDLE , '1' when others;
+	with state_current select s_tx_data		<= s_data when ST_GET_DATA | ST_DATA, s_flag when others;
+	with state_current select s_flag(s_flag'high-FLAG_WIDTH) <= '0' when  ST_BEG_FLAG|ST_BEG_FLAG_START , '1' when others;
+
+	with state_current select s_tx_count	<= i_count	when ST_GET_DATA | ST_DATA, C_FLAG_BIT_COUNT when others;
 		
 	
 
