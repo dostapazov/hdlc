@@ -15,6 +15,7 @@ entity hdlc_transmitter is
 		i_clk		: in 	std_logic;
 		i_duration	: in	natural range 0 to 4;
 		i_data		: in	std_logic_vector(DATA_WIDTH - 1 downto 0);
+		i_count		: in	positive  range 1 to DATA_WIDTH := DATA_WIDTH;
 		i_write 	: in	std_logic;
 		
 		o_rdy		: out	std_logic;
@@ -29,8 +30,7 @@ architecture rtl of hdlc_transmitter is
 
 	type HDLC_TX_STATE_T IS (ST_RST ,ST_IDLE, ST_BEG_FLAG, ST_GET_DATA ,ST_DATA, ST_BIT_STAFFING,ST_END_FLAG );
 	signal state_current, state_next : HDLC_TX_STATE_T := ST_IDLE;
-	signal s_out_rdy, s_out_en	: std_logic;
-	signal s_out_data	: std_logic_vector(i_data'range);
+	signal s_out_rdy, s_out_en, s_out_bit	: std_logic;
 	signal s_rst : std_logic := '1';
 	signal s_clk : std_logic;
 	signal s_rdy : std_logic;
@@ -54,11 +54,31 @@ begin
 		i_rst		=> s_rst,
 		i_clk		=> s_clk,
 		i_duration	=> i_duration,
-		i_data		=> s_out_data(s_out_data'high),
+		i_data		=> s_out_bit,
 		i_en		=> s_out_en,
 		o_rdy		=> s_out_rdy,
 		o_line		=> o_line
 	);
+
+	tx_data: entity work.hdlc_tx_data
+	  generic map (
+		DATA_WIDTH => DATA_WIDTH,
+		FLAG_WIDTH => FLAG_WIDTH
+	  )
+	  port map (
+		i_rst       => i_rst,
+		i_clk       => i_clk,
+		i_data      => i_data,
+		i_count     => i_count,
+		i_no_bstaff => i_no_bstaff,
+		i_en        => i_en,
+		i_rdy_out   => i_rdy_out,
+		o_out_en    => o_out_en,
+		o_rdy       => o_rdy,
+		o_tx_data   => o_tx_data,
+		o_bstaf     => o_bstaf,
+		o_bstaf_cnt => o_bstaf_cnt
+	  );
 	
 	n_state: 
 	process(state_next) begin
@@ -67,9 +87,6 @@ begin
 	
 	s_state: 
 	process(s_clk, s_rst) 
-	variable v_flag_counter : natural;
-	variable v_bit_counter	: natural;
-	variable v_bit_staff	: natural;	
 	
 	begin
 		if(s_rst = '1') then
@@ -79,52 +96,14 @@ begin
 			
 			case state_current is
 				when ST_RST	=>
-					s_out_data(s_out_data'high)	<= '0';	
 					if(s_out_rdy = '1') then
 						state_next <= ST_IDLE;
 					end if;
 				
 				when ST_IDLE	=>
-					s_out_data(s_out_data'high)	<= '0';						
-					if i_write = '1' then
-						s_out_data(s_out_data'high)	<= '1';	
-						state_next		<= ST_BEG_FLAG;
-						v_flag_counter	:= 0;
-					end if;
-				
 				when ST_BEG_FLAG	=>
-				
-					if(s_out_rdy = '0') then
-						v_flag_counter := v_flag_counter + 1;
-						if v_flag_counter = FLAG_WIDTH then
-							state_next <= ST_GET_DATA; -- get data to write
-							s_out_data(s_out_data'high)  <= '0';
-							v_bit_staff := 0;
-						end if;
-					end if;
-					
 				when ST_GET_DATA	=>
-				
-					if(s_out_rdy = '0') then
-						if i_write = '1' then
-							state_next	<= ST_DATA; 
-							s_out_data  <= i_data;
-							v_bit_counter := i_data'length;
-						else
-							state_next	<= ST_END_FLAG; 
-							s_out_data(s_out_data'high)  <= '1';
-							v_flag_counter	:= 0;
-							
-						end if;
-					end if;
-					
 				when ST_END_FLAG	=>	
-					if(s_out_rdy = '0') then
-						v_flag_counter := v_flag_counter + 1;
-						if v_flag_counter = END_FLAG_WIDTH then
-							state_next <= ST_IDLE;
-						end if;
-					end if;
 				when others =>
 					state_next <= ST_RST;
 			end case;
@@ -134,7 +113,6 @@ begin
 	
 	
 	with state_current  select s_rdy	<= '1' when ST_IDLE | ST_DATA,	'0' when others;
-	
 	with state_current  select s_out_en	<= '0' when ST_RST	| ST_IDLE,	'1' when others;
 		
 	

@@ -1,8 +1,8 @@
 {
  "libraries": {
   "tbench_helpers/*.vhd": "tb_helpers",
-  "HDLC/*.vhd": "hdlc_lib",
-  "HDLC/testbenches/*.vhd": "hdlc_lib_tb",
+  "HDLC/*.vhd": "work",
+  "HDLC/testbenches/*.vhd": "tb_hdlc",
 
 
   "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/array/src/*.vhd": "vunit_lib",
