@@ -29,7 +29,7 @@ end entity hdlc_transmitter;
 architecture rtl of hdlc_transmitter is
 
 	constant C_FLAG_BIT_COUNT	: positive   := FLAG_WIDTH+1;
-	type HDLC_TX_STATE_T IS (ST_RST ,ST_IDLE, ST_BEG_FLAG , ST_GET_DATA ,ST_DATA, ST_BIT_STAFFING,ST_END_FLAG );
+	type HDLC_TX_STATE_T IS (ST_RST ,ST_IDLE, ST_BEG_FLAG , ST_GET_DATA ,ST_DATA, ST_END_FLAG );
 	signal state_current, state_next : HDLC_TX_STATE_T := ST_IDLE;
 	
 	signal s_line		: std_logic;
