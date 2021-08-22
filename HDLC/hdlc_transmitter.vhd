@@ -54,7 +54,7 @@ architecture rtl of hdlc_transmitter is
 begin
 	s_clk		<= i_clk;
 	o_rdy		<= s_rdy;
-	o_active	<= s_active;
+	o_active	<= s_out_en;
 	s_duration	<= i_duration;
 	s_write		<= i_write;
 
@@ -155,12 +155,12 @@ begin
 	end process s_state;
 	
 	
-	with state_current select s_rdy			<= '0' when ST_RST | ST_GET_DATA,	'1' when others;
+	with state_current select s_rdy			<= '0' when ST_RST | ST_GET_DATA |ST_END_FLAG,	'1' when others;
 
 	with state_current select s_tx_en		<= '0' when ST_RST	| ST_IDLE,	'1' when others;
 
 	with state_current select s_no_bstaff	<= '0' when ST_GET_DATA, '1' when others;
-	with state_current select s_active		<= '0' when ST_RST	| ST_IDLE , '1' when others;
+	
 	with state_current select s_tx_data		<= s_data when ST_GET_DATA | ST_DATA, s_flag when others;
 	with state_current select s_flag(s_flag'high-FLAG_WIDTH) <= '0' when  ST_BEG_FLAG , '1' when others;
 
