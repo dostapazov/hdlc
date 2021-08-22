@@ -6,3 +6,5 @@
 *.summary
 *.bak
 *.qws
+*project*/
+
