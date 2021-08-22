@@ -29,7 +29,7 @@ end entity hdlc_transmitter;
 architecture rtl of hdlc_transmitter is
 
 	constant C_FLAG_BIT_COUNT	: positive   := FLAG_WIDTH+1;
-	type HDLC_TX_STATE_T IS (ST_RST ,ST_IDLE, ST_BEG_FLAG_START, ST_BEG_FLAG , ST_GET_DATA ,ST_DATA, ST_BIT_STAFFING,ST_END_FLAG );
+	type HDLC_TX_STATE_T IS (ST_RST ,ST_IDLE, ST_BEG_FLAG , ST_GET_DATA ,ST_DATA, ST_BIT_STAFFING,ST_END_FLAG );
 	signal state_current, state_next : HDLC_TX_STATE_T := ST_IDLE;
 	
 	signal s_active		: std_logic;
@@ -122,11 +122,7 @@ begin
 				
 				when ST_IDLE		=>
 					if(s_write = '1') then
-						state_next	<= ST_BEG_FLAG_START;
-					end if;
-				when ST_BEG_FLAG_START	=>
-					if(s_tx_rdy = '0') then
-						state_next <= ST_GET_DATA;
+						state_next	<= ST_BEG_FLAG;
 					end if;
 				when ST_BEG_FLAG	=>
 					if(s_tx_rdy = '0') then
@@ -148,6 +144,9 @@ begin
 						state_next <= ST_GET_DATA;
 					end if;
 				when ST_END_FLAG	=>	
+					if(s_tx_rdy = '0') then
+						state_next <= ST_IDLE;
+					end if;
 				when others =>
 					state_next <= ST_RST;
 			end case;
@@ -163,7 +162,7 @@ begin
 	with state_current select s_no_bstaff	<= '0' when ST_GET_DATA, '1' when others;
 	with state_current select s_active		<= '0' when ST_RST	| ST_IDLE , '1' when others;
 	with state_current select s_tx_data		<= s_data when ST_GET_DATA | ST_DATA, s_flag when others;
-	with state_current select s_flag(s_flag'high-FLAG_WIDTH) <= '0' when  ST_BEG_FLAG|ST_BEG_FLAG_START , '1' when others;
+	with state_current select s_flag(s_flag'high-FLAG_WIDTH) <= '0' when  ST_BEG_FLAG , '1' when others;
 
 	with state_current select s_tx_count	<= i_count	when ST_GET_DATA | ST_DATA, C_FLAG_BIT_COUNT when others;
 		

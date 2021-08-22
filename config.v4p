@@ -42,7 +42,6 @@
   "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/verification_components/test/*.vhd": "vunit_lib",
 
   "/home/dostap/.local/lib/python3.9/site-packages/vunit/vhdl/*.vhd": "vunit_lib",
-
   
  },
 }

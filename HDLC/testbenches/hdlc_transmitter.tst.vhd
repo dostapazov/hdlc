@@ -17,7 +17,6 @@ entity tb_hdlc_transmitter is
 	);
 	
 	constant C_BIT_OUTPUT_CLOCKS	: positive	:= (2 ** (1+duration));
-	constant C_END_FLAG_WIDTH		: positive	:= flag_width + 1;
 	
 	
 end entity tb_hdlc_transmitter;
@@ -68,11 +67,13 @@ test_main:
 		procedure write_data(constant data : std_logic_vector(i_data'range)) is
 			variable wait_result	: boolean;
 		begin
-				wait_logic(wait_result,i_clk,o_rdy,'1',10);
+				i_write <= '1';
+				wait_logic(wait_result,i_clk,o_rdy,'1',C_BIT_OUTPUT_CLOCKS*data_width);
+				check_true(wait_result,"Timeout to wait reaady to transmit");
 				if wait_result then
-					i_write <= '1';
 					i_data	<= data;
-					wait_logic(wait_result,i_clk,o_rdy,'0',20);
+					wait_logic(wait_result,i_clk,o_rdy,'0',C_BIT_OUTPUT_CLOCKS*2);
+					--check_true(wait_result,"Timeout to confirm latch input data");
 				end if;
 				i_write <= '0';
 		end procedure write_data;
@@ -101,11 +102,13 @@ test_main:
 				check(o_rdy		= '1', "Expected RDY active after reset");
 				check(o_line	= '0', "Expected line output passive");
 				check(o_active	= '0', "Expected o_active is low");
-			elsif run("start transmit rise up o_active") then
+			elsif run("start transmit rise up o_active and then to confirm latch data fall down o_rdy") then
 				reset;
 				write_data("10101010");
-				delay_clock(i_clk,20);
 				check(o_active = '1',"Expected o_active became '1'");
+				check(o_rdy = '0', "Expected confirm data latch by zero level of o_rdy");
+				delay_clock(i_clk,C_BIT_OUTPUT_CLOCKS*32);
+				
 			end if;
 		end loop;
 		
