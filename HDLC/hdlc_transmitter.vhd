@@ -28,7 +28,7 @@ end entity hdlc_transmitter;
 
 architecture rtl of hdlc_transmitter is
 
-	constant C_FLAG_BIT_COUNT	: positive   := FLAG_WIDTH+2;
+	constant C_FLAG_BIT_COUNT	: positive   := FLAG_WIDTH+1;
 	type HDLC_TX_STATE_T IS (ST_RST ,ST_IDLE, ST_BEG_FLAG , ST_GET_DATA ,ST_DATA, ST_BIT_STAFFING,ST_END_FLAG );
 	signal state_current, state_next : HDLC_TX_STATE_T := ST_IDLE;
 	
@@ -57,6 +57,7 @@ begin
 	o_active	<= s_out_en;
 	s_duration	<= i_duration;
 	s_write		<= i_write;
+	o_line		<= s_line ;
 
 
 	
@@ -77,7 +78,7 @@ begin
 		i_data		=> s_out_bit,
 		i_en		=> s_out_en,
 		o_rdy		=> s_out_rdy,
-		o_line		=> o_line
+		o_line		=> s_line
 	);
 
 	tx_data: entity work.hdlc_tx_data
@@ -154,19 +155,11 @@ begin
 		end if;
 	end process s_state;
 	
-	
 	with state_current select s_rdy			<= '0' when ST_RST | ST_GET_DATA |ST_END_FLAG,	'1' when others;
-
 	with state_current select s_tx_en		<= '0' when ST_RST	| ST_IDLE,	'1' when others;
-
 	with state_current select s_no_bstaff	<= '0' when ST_GET_DATA, '1' when others;
-	
 	with state_current select s_tx_data		<= s_data when ST_GET_DATA | ST_DATA, s_flag when others;
-	with state_current select s_flag(s_flag'high) <= '0' when  ST_BEG_FLAG , '1' when others;
-	with state_current select s_flag(s_flag'high-FLAG_WIDTH-1) <= '0' when  ST_BEG_FLAG , '1' when others;
-
+	with state_current select s_flag(s_flag'high-FLAG_WIDTH) <= '0' when  ST_BEG_FLAG , '1' when others;
 	with state_current select s_tx_count	<= i_count	when ST_GET_DATA | ST_DATA, C_FLAG_BIT_COUNT when others;
-		
-	
 
 end architecture rtl;

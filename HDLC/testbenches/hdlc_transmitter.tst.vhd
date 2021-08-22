@@ -74,6 +74,18 @@ test_main:
 			wait_logic(wait_result,i_clk,o_rdy,ready_state,wait_clocks);
 		end procedure  wait_ready;
 
+		procedure check_frame_finish (variable wres : inout boolean)
+		is
+			
+		begin
+				delay_clock(i_clk,C_BIT_OUTPUT_CLOCKS);
+				wait_logic(wres,i_clk,o_active,'0',C_BIT_OUTPUT_CLOCKS*data_width*3);
+				check_true(wres, "Timeout end of transmit");
+				wait_logic(wres,i_clk,o_line,'0',C_BIT_OUTPUT_CLOCKS);
+				check_true(wres, "o_line must be set to zero after frame finish");
+
+		end procedure;
+
 		
 		procedure write_data(constant data : std_logic_vector(i_data'range)) is
 			variable wait_result	: boolean;
@@ -130,28 +142,27 @@ test_main:
 				write_data("10101010");
 				check(o_active = '1',"Expected o_active became '1'");
 				check(o_rdy = '0', "Expected confirm data latch by zero level of o_rdy");
-				wait_logic(wres,i_clk,o_active,'0',C_BIT_OUTPUT_CLOCKS*data_width*3);
-				check_true(wres, "Timeout end of transmit");
+				check_frame_finish(wres);
+				
 				
 			elsif run("transmit two data portion may set o_active at finish") then
 				reset;
 				write_data("10101010");
 				write_data("00111100");
-				wait_logic(wres,i_clk,o_active,'0',C_BIT_OUTPUT_CLOCKS*data_width*3);
-				check_true(wres, "Timeout end of transmit");
+				check_frame_finish(wres);
 			
 			elsif run("transmit two frames by three bytes") then
 				reset;
+
 				write_data("10101010");
 				write_data("11111111");
 				write_data("00111100");
-				wait_logic(wres,i_clk,o_active,'0',C_BIT_OUTPUT_CLOCKS*data_width*3);
-				check_true(wres, "Timeout end of transmit frame-1");
+				check_frame_finish(wres);
+
 				write_data("10101010");
 				write_data("11111111");
 				write_data("00111100");
-				wait_logic(wres,i_clk,o_active,'0',C_BIT_OUTPUT_CLOCKS*data_width*3);
-				check_true(wres, "Timeout end of transmit frame-2");
+				check_frame_finish(wres);
 			end if;
 
 		end loop;
