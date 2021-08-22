@@ -28,11 +28,11 @@ end entity hdlc_transmitter;
 
 architecture rtl of hdlc_transmitter is
 
-	constant C_FLAG_BIT_COUNT	: positive   := FLAG_WIDTH+1;
+	constant C_FLAG_BIT_COUNT	: positive   := FLAG_WIDTH+2;
 	type HDLC_TX_STATE_T IS (ST_RST ,ST_IDLE, ST_BEG_FLAG , ST_GET_DATA ,ST_DATA, ST_BIT_STAFFING,ST_END_FLAG );
 	signal state_current, state_next : HDLC_TX_STATE_T := ST_IDLE;
 	
-	signal s_active		: std_logic;
+	signal s_line		: std_logic;
 	signal s_write		: std_logic;
 	signal s_flag		: std_logic_vector(i_data'range) := ( others => '1');
 	signal s_data		: std_logic_vector(i_data'range);
@@ -162,7 +162,8 @@ begin
 	with state_current select s_no_bstaff	<= '0' when ST_GET_DATA, '1' when others;
 	
 	with state_current select s_tx_data		<= s_data when ST_GET_DATA | ST_DATA, s_flag when others;
-	with state_current select s_flag(s_flag'high-FLAG_WIDTH) <= '0' when  ST_BEG_FLAG , '1' when others;
+	with state_current select s_flag(s_flag'high) <= '0' when  ST_BEG_FLAG , '1' when others;
+	with state_current select s_flag(s_flag'high-FLAG_WIDTH-1) <= '0' when  ST_BEG_FLAG , '1' when others;
 
 	with state_current select s_tx_count	<= i_count	when ST_GET_DATA | ST_DATA, C_FLAG_BIT_COUNT when others;
 		
